@@ -63,7 +63,7 @@ If you encounter any issues, feel free to open a new issue. If you have any new 
 
 ## Version History
 * [1.0.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.0.0)
-    * [Initial Release](https://github.com/prochy-exe/alfetcher/commit/dc80df638f07f894c026038f23b54c6ac5d22aaa)
+    * [Initial Release](https://github.com/prochy-exe/alfetcher/commit/4b67b1d8719d183012446a065c5b6c941ec6518e)
 
 ## Acknowledgments
 
