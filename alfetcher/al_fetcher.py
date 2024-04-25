@@ -47,7 +47,7 @@ def check_status_in_cache():
             if not release_date:
                 continue
             status = cache[anime]['status']
-            if status == 'RELEASING':
+            if status == "RELEASING":
                     try:
                         next_ep_date = release_date + timedelta(cache[anime]['upcoming_ep'] * 7)
                         if end_date and current_date > end_date:
@@ -59,7 +59,7 @@ def check_status_in_cache():
                     except: #force update if we don't have the next episode
                         updated_info = get_anime_info(anime, True)
                         cache.update(updated_info)
-            elif status == 'NOT_YET_RELEASED':
+            elif status == "NOT_YET_RELEASED":
                 if release_date:
                     if current_date > release_date:
                         cache.update(get_anime_info(anime, True))
@@ -91,8 +91,8 @@ def make_graphql_request(query, variables=None, anilist_token=None):
         anilist_token = load_config()
 
     # Constants for GraphQL endpoint and headers
-    ANILIST_API_URL = 'https://graphql.anilist.co'
-    HEADERS = {'Content-Type': 'application/json', 'Authorization': f'Bearer {anilist_token}'}
+    ANILIST_API_URL = "https://graphql.anilist.co"
+    HEADERS = {'Content-Type': "application/json", 'Authorization': f"Bearer {anilist_token}"}
 
     def make_request():
         response = requests.post(ANILIST_API_URL, json={'query': query, 'variables': variables}, headers=HEADERS)
@@ -105,14 +105,14 @@ def make_graphql_request(query, variables=None, anilist_token=None):
             return response.json().get('data', {})
         elif response.status_code == 429:
             print(f"Rate limit exceeded. Waiting before retrying...")
-            print(query, variables, HEADERS, sep='\n')
+            print(query, variables, HEADERS, sep="\n")
             print(response.json())
             retry_after = int(response.headers.get('retry-after', 1))
             time.sleep(retry_after)
             retries += 1
         elif response.status_code == 500 or response.status_code == 400:
             print(f"Unknown error occured, retrying...")
-            print(query, variables, HEADERS, sep='\n')
+            print(query, variables, HEADERS, sep="\n")
             print(response.json())
             retries += 1
         elif response.status_code == 404:
@@ -129,14 +129,14 @@ def make_graphql_request(query, variables=None, anilist_token=None):
                 
         print(f"Retrying... (Attempt {retries})")
 
-def get_latest_anime_entry_for_user(status = 'ALL', anilist_token=None,  username=None):
+def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  username=None):
     if not username:
         username = get_userdata(anilist_token)[0]
     status = status.upper()
-    status_options = ['CURRENT', 'PLANNING', 'COMPLETED', 'DROPPED', 'PAUSED', 'REPEATING']
-    if status != 'ALL':
+    status_options = ["CURRENT", "PLANNING", "COMPLETED", "DROPPED", "PAUSED", "REPEATING"]
+    if status != "ALL":
         if not status in status_options:
-            print("Invalid status option. Allowed options are:", ', '.join(str(option) for option in status_options) )
+            print("Invalid status option. Allowed options are:", ", ".join(str(option) for option in status_options) )
             return
         query = '''
         query ($username: String) {
@@ -225,15 +225,15 @@ def get_latest_anime_entry_for_user(status = 'ALL', anilist_token=None,  usernam
     print(f"No entries found for {username}'s planned anime list.")
     return None
 
-def get_all_anime_for_user(status_list='ALL', anilist_token=None, username=None):
+def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None):
     if not username:
         username = get_userdata(anilist_token)[0]
     def main_function(status):
         status = status.upper()
-        status_options = ['CURRENT', 'PLANNING', 'COMPLETED', 'DROPPED', 'PAUSED', 'REPEATING']
-        if status != 'ALL':
+        status_options = ["CURRENT", "PLANNING", "COMPLETED", "DROPPED", "PAUSED", "REPEATING"]
+        if status != "ALL":
             if not status in status_options:
-                print("Invalid status option. Allowed options are:", ', '.join(str(option) for option in status_options) )
+                print("Invalid status option. Allowed options are:", ", ".join(str(option) for option in status_options) )
                 return
             query = '''
             query ($username: String) {
@@ -502,7 +502,7 @@ def generate_anime_entry(anime_info):
         relations = {}
         edges = anime_info['relations']['edges']
         for edge in edges:
-            if edge['relationType'] == 'PREQUEL' or edge['relationType'] == 'SEQUEL':
+            if edge['relationType'] == "PREQUEL" or edge['relationType'] == "SEQUEL":
                 relation_id = str(edge['node']['id'])
                 relations[relation_id] = {}
                 relations[relation_id]['main_title'] = edge['node']['title']['romaji']
@@ -516,11 +516,11 @@ def generate_anime_entry(anime_info):
         genres = anime_data['genres']
         tags = [item['name'] for item in anime_data['tags']]
         adult_status = anime_data['isAdult']
-        sus_tags = ['Nudity', 'Bondage', 'Masochism', 'Sadism', 'Exhibitionism']
+        sus_tags = ["Nudity", "Bondage", "Masochism", "Sadism", "Exhibitionism"]
         for sus_tag in sus_tags:
             if sus_tag in tags:
                 return True
-        if 'Ecchi' in genres or adult_status:
+        if "Ecchi" in genres or adult_status:
             return True
         else:
             return False
@@ -546,7 +546,7 @@ def generate_anime_entry(anime_info):
     anime_data['status'] = anime_info['status']
     anime_data['release_date'] = get_release_date(anime_info)
     anime_data['end_date'] = get_end_date(anime_info)
-    anime_data['upcoming_ep'] = ((generate_upcoming_ep(anime_data['release_date']) if anime_data['status'] == 'RELEASING' else None) 
+    anime_data['upcoming_ep'] = ((generate_upcoming_ep(anime_data['release_date']) if anime_data['status'] == "RELEASING" else None) 
                                 if not anime_info['nextAiringEpisode'] else anime_info['nextAiringEpisode']['episode']) #who needs readability
     anime_data['format'] = anime_info['format']
     anime_data['related'] = getRelated()
@@ -563,7 +563,7 @@ def get_id(name, anilist_token=None):
         if anime_info:
             ani_dict = get_anime_info(anime_info, False, anilist_token)
             status = ani_dict[anime_info]['status']
-            if status == 'NOT_YET_RELEASED':
+            if status == "NOT_YET_RELEASED":
                 anime_info = None
             json_out = {name: anime_info}
             utils_save_json(anilist_search_cache_path, json_out, False)

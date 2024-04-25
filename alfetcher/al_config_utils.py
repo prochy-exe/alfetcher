@@ -22,26 +22,26 @@ def setup_webserver():
     # Enable CORS for all routes
     @app.after_request
     def add_cors_headers(response):
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Origin'] = "*"
+        response.headers['Access-Control-Allow-Headers'] = "Content-Type"
+        response.headers['Access-Control-Allow-Methods'] = "GET, POST, OPTIONS"
         return response
 
     @app.route('/access_token') #Listen for token webhook
     def receive_token():
         def make_request(code):
             headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
+                'Content-Type': "application/json",
+                'Accept': "application/json",
             }
             json = {
-                'grant_type': 'authorization_code',
+                'grant_type': "authorization_code",
                 'client_id': global_id,
                 'client_secret': global_secret,
-                'redirect_uri': 'http://localhost:8888/access_token',
+                'redirect_uri': "http://localhost:8888/access_token",
                 'code': f'{code}'
             }
-            response = requests.post('https://anilist.co/api/v2/oauth/token', json=json, headers=headers)
+            response = requests.post("https://anilist.co/api/v2/oauth/token", json=json, headers=headers)
             return response.json()
 
         # Extracting query parameters from the request URL
@@ -55,17 +55,17 @@ def setup_webserver():
         global access_token
         access_token = make_request(code)['access_token']
         http_server.stop()
-        return redirect('https://anilist.co')
+        return redirect("https://anilist.co")
         
     def start_webserver():
         if headless_config:
-           print('Open this URL in your browser: ', global_tooltip)
+           print("Open this URL in your browser: ", global_tooltip)
         else:
-            print('Authentificate in the opened tab')
+            print("Authentificate in the opened tab")
             webbrowser.open(global_tooltip, 0)
         http_server.serve_forever()
 
-    http_server = WSGIServer(('127.0.0.1', 8888), app, log=None)
+    http_server = WSGIServer(("127.0.0.1", 8888), app, log=None)
 
     return start_webserver, http_server 
         
@@ -73,7 +73,7 @@ def config_setup(print_only = False):
     setup_function, _ = setup_webserver()  # Setup the server function here
     
     def gen_please(name, help):
-        return f'Please input your {name} here ({help}):\n'
+        return f"Please input your {name} here ({help}):\n"
     
     def get_input(prompt, data_type = str):
         while True:
@@ -103,14 +103,14 @@ def config_setup(print_only = False):
     print("Please create a new API client")
     if headless_config:
         if is_displayless:
-            print('The setup process cannot be continued on this machine')
-            print('Please SSH into this machine, set the access key as an env variable or import the config directly')
-        client_id = get_input(gen_please('Anilist API Client ID',"https://anilist.co/settings/developer"))
-        client_secret = get_input(gen_please('Anilist API Client Secret',f"https://anilist.co/settings/client/{client_id}"))
+            print("The setup process cannot be continued on this machine")
+            print("Please SSH into this machine, set the access key as an env variable or import the config directly")
+        client_id = get_input(gen_please("Anilist API Client ID","https://anilist.co/settings/developer"))
+        client_secret = get_input(gen_please("Anilist API Client Secret",f"https://anilist.co/settings/client/{client_id}"))
     else:
-        webbrowser.open('https://anilist.co/settings/developer', 0)
-        client_id = get_input(gen_please('Anilist API Client ID',"Paste the Client ID"))    
-        client_secret = get_input(gen_please('Anilist API Client Secret',"Paste the Client Secret"))
+        webbrowser.open("https://anilist.co/settings/developer", 0)
+        client_id = get_input(gen_please("Anilist API Client ID","Paste the Client ID"))    
+        client_secret = get_input(gen_please("Anilist API Client Secret","Paste the Client Secret"))
     config_dict['anilist_user_token'] = generate_api_key(client_id, client_secret)
     if not print_only:    
         utils_save_json(config_path, config_dict)
