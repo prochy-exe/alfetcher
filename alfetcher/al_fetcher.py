@@ -479,24 +479,24 @@ def anilist_fetch_anime_info(anilist_id, anilist_token=None):
 
 def generate_anime_entry(anime_info):
     def get_release_date(anime_data):
-            start_date = anime_data.get('startDate', {})
-            day = start_date.get('day', 28)
-            day = 28 if day is None else day
-            try:
-                release_date = datetime(start_date['year'], start_date.get('month', 1), day).strftime('%Y-%m-%d')
-            except TypeError:
-                release_date = None
-            return release_date
+        start_date = anime_data.get('startDate', {})
+        year = start_date.get('year')
+        month = start_date.get('month')
+        if not year or not month:
+            return None
+        day = start_date.get('day') if start_date['day'] else 1
+        release_date = datetime(year, month, day).strftime('%Y-%m-%d')
+        return release_date
         
     def get_end_date(anime_data):
-            end_date = anime_data.get('endDate', {})
-            day = end_date.get('day', 28)
-            day = 28 if day is None else day
-            try:
-                end_date = datetime(end_date['year'], end_date.get('month', 1), day).strftime('%Y-%m-%d')
-            except TypeError:
-                end_date = None
-            return end_date         
+        end_date = anime_data.get('endDate', {})
+        year = end_date.get('year')
+        month = end_date.get('month')
+        if not year or not month:
+            return None
+        day = end_date.get('day') if end_date['day'] else 1
+        end_date = datetime(year, month, day).strftime('%Y-%m-%d')
+        return end_date         
 
     def getRelated():
         relations = {}
