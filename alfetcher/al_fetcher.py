@@ -619,3 +619,19 @@ def get_userdata(anilist_token=None):
         username = data['Viewer']['name']
         profile_pic = data['Viewer']['avatar']['large']
         return [username, profile_pic]
+
+def al_to_mal_id(al_id):
+    query = """
+    query ($mediaId: Int) {
+        Media(id: $mediaId, type: ANIME) {
+            idMal
+        }
+    }
+    """
+    variables = {'mediaId': al_id}
+    data = make_graphql_request(query, variables)
+
+    if data:
+        return int(data['Media']['idMal'])
+    return None
+
