@@ -635,3 +635,32 @@ def al_to_mal_id(al_id):
         return int(data['Media']['idMal'])
     return None
 
+def update_entry(anime_id, progress, anilist_token=None):
+    progress = int(progress)
+    total_eps = get_anime_info(anime_id, anilist_token=anilist_token)[anime_id]['total_eps']
+    query = """
+        mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus) {
+            SaveMediaListEntry(mediaId: $mediaId, progress: $progress, status: $status) {
+                id
+            }
+        }
+    """
+    variables = {}
+    variables['mediaId'] = anime_id
+    variables['progress'] = progress
+    if progress == total_eps:
+        variables['status'] = 'COMPLETED'
+    elif progress == 0:
+        variables['status'] = 'PLANNING'
+        query = """
+            mutation ($mediaId: Int, $status: MediaListStatus) {
+                SaveMediaListEntry(mediaId: $mediaId, status: $status) {
+                    id
+                }
+            }
+        """
+        del variables['progress']
+    else:
+        variables['status'] = 'CURRENT'
+    make_graphql_request(query, variables, anilist_token)
+    print('Updating progress successful')
