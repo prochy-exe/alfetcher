@@ -3,8 +3,6 @@ from datetime import datetime, timedelta
 from .utils import utils_save_json, utils_read_json
 from .al_config_utils import config_setup
 
-total_user = {}
-user_entries = {}
 script_path = os.path.dirname(os.path.abspath(__file__))
 anilist_id_cache_path = os.path.join(script_path, 'cache', 'anilist_id_cache.json')
 anilist_search_cache_path = os.path.join(script_path, 'cache', 'anilist_search_cache.json')
@@ -205,9 +203,6 @@ def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  usernam
 
     data = make_graphql_request(query, variables, anilist_token)
 
-    if not username in user_entries:
-        user_entries[username] = {}
-        
     if data:
         entries = data.get('MediaListCollection', {}).get('lists', [])[0].get('entries', [])
         if entries:
@@ -219,7 +214,6 @@ def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  usernam
                 user_entry[anime_id].update(anime_info)
                 user_entry[anime_id]['watched_ep'] = anime['progress']
                 user_entry[anime_id]['watching_status'] = anime['status']
-                user_entries[username][anime_id] = user_entry
                 return user_entry
 
     print(f"No entries found for {username}'s planned anime list.")
@@ -302,15 +296,6 @@ def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None)
 
         data = make_graphql_request(query, variables, anilist_token)
 
-        if not username in user_entries:
-            user_entries[username] = {}
-
-        if not username in total_user:
-            total_user[username] = {}
-
-        if not status in user_entries[username]:
-            user_entries[username][status] = {}
-
         user_ids = {}
             
         if data:
@@ -332,63 +317,49 @@ def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None)
                             user_ids[anime_id].update(anime_info)
                             user_ids[anime_id]['watched_ep'] = anime['progress']
                             user_ids[anime_id]['watching_status'] = anime['status']
-                        user_entries[username][status].update(user_ids)
-                        return
+                        return user_ids
         print(f"No entries found for {username}'s planned anime list.")
         return None    
 
     if isinstance(status_list, str):
         status_list = status_list.upper()
         main_function(status_list)
-        return user_entries[username][status_list]
+        return main_function(status_list)
     elif len(status_list) == 1:
         status_list = status_list[0].upper()
-        main_function(status_list)
-        return user_entries[username][status_list]
+        return main_function(status_list)
     elif isinstance(status_list, list):
+        ani_list = {}
         for status in status_list:
             status.upper()
-            main_function(status)
-            total_user[username].update(user_entries[username][status])
-        return total_user[username]
+            ani_list.update(main_function(status))
+        return ani_list
 
 def get_anime_entry_for_user(anilist_id, anilist_token=None, username=None):
     if not username:
         username = get_userdata(anilist_token)[0]
     anilist_id = str(anilist_id)
-    try:
-        if anilist_id in user_entries[username]['ALL']:
-                    return {anilist_id: user_entries[username]['ALL'][anilist_id]}
-    except KeyError:
-        query = '''
-        query ($mediaId: Int, $username: String) {
-            MediaList(mediaId: $mediaId, userName: $username, type: ANIME) {
-                mediaId
-                progress
-                status
-            }
-        }
-        '''
-        variables = {'mediaId': anilist_id, 'username': username}
-        data = make_graphql_request(query, variables, anilist_token)
-        if data:
-            anime = data.get('MediaList', {})
-            anime_id = str(anime['mediaId'])
-            anime_info = get_anime_info(anime_id, False, anilist_token)
-            user_entry = {}    # Initialize as a dictionary if not already initialized
-            user_entry[anime_id] = {}    # Initialize as a dictionary if not already initialized
-            user_entry[anime_id].update(anime_info)
-            user_entry[anime_id]['watched_ep'] = anime['progress']
-            user_entry[anime_id]['watching_status'] = anime['status']
-            if not username in user_entries:
-                user_entries[username] = {}
-            user_entries[username][anime_id] = user_entry
-            return user_entry
+    query = '''
+    query ($mediaId: Int, $username: String) {
+        MediaList(mediaId: $mediaId, userName: $username, type: ANIME) {
+            mediaId
+            progress
+            status
+        }   
+    }
+    '''
+    variables = {'mediaId': anilist_id, 'username': username}
+    data = make_graphql_request(query, variables, anilist_token)
+    if data:
+        anime = data.get('MediaList', {})
+        anime_id = str(anime['mediaId'])
+        anime_info = get_anime_info(anime_id, False, anilist_token)
+        user_entry = {}    # Initialize as a dictionary if not already initialized
+        user_entry.update(anime_info)
+        user_entry[anime_id]['watched_ep'] = anime['progress']
+        user_entry[anime_id]['watching_status'] = anime['status']
+        return user_entry
     return None
-
-def reset_user_cache(username):
-    user_entries[username] = {}
-    total_user[username] = {}
 
 def get_anime_info(anime_id, force_update = False, anilist_token=None):
     if force_update:
