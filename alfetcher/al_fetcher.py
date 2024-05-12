@@ -112,7 +112,7 @@ def make_graphql_request(query, variables=None, anilist_token=None, user_request
             time.sleep(retry_after)
             retries += 1
         elif response.status_code == 500 or response.status_code == 400:
-            print(f"Unknown error occured, retrying...")
+            print(f"Unknown error occurred, retrying...")
             print(query, variables, HEADERS, sep="\n")
             print(response.json())
             retries += 1
