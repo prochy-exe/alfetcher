@@ -78,19 +78,22 @@ def load_config():
 
 # Functions
 
-def make_graphql_request(query, variables=None, anilist_token=None):
-    if anilist_token:
-        pass
-    elif 'anilist_key' in os.environ:
-        anilist_token = os.getenv('anilist_key')
-        if not os.path.exists(os.path.dirname(config_path)):
-            os.makedirs(os.path.dirname(config_path))
-    else:
-        anilist_token = load_config()
-
+def make_graphql_request(query, variables=None, anilist_token=None, user_request = False):
     # Constants for GraphQL endpoint and headers
     ANILIST_API_URL = "https://graphql.anilist.co"
-    HEADERS = {'Content-Type': "application/json", 'Authorization': f"Bearer {anilist_token}"}
+    HEADERS = {}
+    HEADERS['Content-Type'] = "application/json"
+    
+    if user_request:
+        if anilist_token:
+            pass
+        elif 'anilist_key' in os.environ:
+            anilist_token = os.getenv('anilist_key')
+            if not os.path.exists(os.path.dirname(config_path)):
+                os.makedirs(os.path.dirname(config_path))
+        else:
+            anilist_token = load_config()
+        HEADERS['Authorization'] = f"Bearer {anilist_token}"
 
     def make_request():
         response = requests.post(ANILIST_API_URL, json={'query': query, 'variables': variables}, headers=HEADERS)
@@ -130,6 +133,10 @@ def make_graphql_request(query, variables=None, anilist_token=None):
 def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  username=None):
     if not username:
         username = get_userdata(anilist_token)[0]
+        user_request = True
+    else:
+        user_request = False
+        
     status = status.upper()
     status_options = ["CURRENT", "PLANNING", "COMPLETED", "DROPPED", "PAUSED", "REPEATING"]
     if status != "ALL":
@@ -201,7 +208,7 @@ def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  usernam
     '''
     variables = {'username': username}
 
-    data = make_graphql_request(query, variables, anilist_token)
+    data = make_graphql_request(query, variables, anilist_token, user_request=user_request)
 
     if data:
         entries = data.get('MediaListCollection', {}).get('lists', [])[0].get('entries', [])
@@ -222,6 +229,10 @@ def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  usernam
 def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None):
     if not username:
         username = get_userdata(anilist_token)[0]
+        user_request = True
+    else:
+        user_request = False
+        
     def main_function(status):
         status = status.upper()
         status_options = ["CURRENT", "PLANNING", "COMPLETED", "DROPPED", "PAUSED", "REPEATING"]
@@ -294,7 +305,7 @@ def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None)
         '''
         variables = {'username': username}
 
-        data = make_graphql_request(query, variables, anilist_token)
+        data = make_graphql_request(query, variables, anilist_token, user_request=user_request)
 
         user_ids = {}
             
@@ -338,6 +349,10 @@ def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None)
 def get_anime_entry_for_user(anilist_id, anilist_token=None, username=None):
     if not username:
         username = get_userdata(anilist_token)[0]
+        user_request = True
+    else:
+        user_request = False
+        
     anilist_id = str(anilist_id)
     query = '''
     query ($mediaId: Int, $username: String) {
@@ -349,7 +364,7 @@ def get_anime_entry_for_user(anilist_id, anilist_token=None, username=None):
     }
     '''
     variables = {'mediaId': anilist_id, 'username': username}
-    data = make_graphql_request(query, variables, anilist_token)
+    data = make_graphql_request(query, variables, anilist_token, user_request=user_request)
     if data:
         anime = data.get('MediaList', {})
         anime_id = str(anime['mediaId'])
@@ -583,7 +598,7 @@ def get_userdata(anilist_token=None):
     """
     
     variables = {}
-    data = make_graphql_request(query, variables, anilist_token)
+    data = make_graphql_request(query, variables, anilist_token, user_request = True)
 
     if data:
         # Extract the username from the response data
@@ -633,5 +648,5 @@ def update_entry(anime_id, progress, anilist_token=None):
         del variables['progress']
     else:
         variables['status'] = 'CURRENT'
-    make_graphql_request(query, variables, anilist_token)
+    make_graphql_request(query, variables, anilist_token, user_request = True)
     print('Updating progress successful')
