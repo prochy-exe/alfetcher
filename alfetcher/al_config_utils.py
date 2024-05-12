@@ -1,8 +1,21 @@
-import os, webbrowser, platform, requests, gevent, gc
+import os, webbrowser, platform, requests, gevent, gc, socket
 from flask import Flask, request, redirect
 from gevent.pywsgi import WSGIServer
 from urllib.parse import parse_qs
 from .utils import utils_save_json
+
+def get_ip_address():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip_address = s.getsockname()[0]
+        s.close()
+        return ip_address
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+host_ip = get_ip_address()
 
 # Paths
 script_path = os.path.dirname(os.path.abspath(__file__))
@@ -38,7 +51,7 @@ def setup_webserver():
                 'grant_type': "authorization_code",
                 'client_id': global_id,
                 'client_secret': global_secret,
-                'redirect_uri': "http://localhost:8888/access_token",
+                'redirect_uri': f"http://{host_ip}:8888/access_token",
                 'code': f'{code}'
             }
             response = requests.post("https://anilist.co/api/v2/oauth/token", json=json, headers=headers)
@@ -65,7 +78,7 @@ def setup_webserver():
             webbrowser.open(global_tooltip, 0)
         http_server.serve_forever()
 
-    http_server = WSGIServer(("127.0.0.1", 8888), app, log=None)
+    http_server = WSGIServer((host_ip, 8888), app, log=None)
 
     return start_webserver, http_server 
         
@@ -90,7 +103,7 @@ def config_setup(print_only = False):
         global global_tooltip
         global_id = client_id
         global_secret = client_secret
-        global_tooltip = f"http://anilist.co/api/v2/oauth/authorize?client_id={client_id}&redirect_uri=http://localhost:8888/access_token&response_type=code" 
+        global_tooltip = f"http://anilist.co/api/v2/oauth/authorize?client_id={client_id}&redirect_uri=http://{host_ip}:8888/access_token&response_type=code" 
         setup_function()  # Start the server here
         user_token = access_token
         gevent.killall(
