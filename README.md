@@ -62,6 +62,16 @@ import alhelper
 If you encounter any issues, feel free to open a new issue. If you have any new ideas or fixes, please open a pull request, they are more than welcome!
 
 ## Version History
+* [1.1.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.1.0)
+    * [fix typo](https://github.com/prochy-exe/alfetcher/commit/dbf3d14e90c4cfeebcef51503a884efd1e1178b5)
+    * [allow some functions to not require user token](https://github.com/prochy-exe/alfetcher/commit/f3e58106709d5b1626b65384977fe22a05c7d647)
+    * [use local ip address instead of localhost](https://github.com/prochy-exe/alfetcher/commit/9d6500229980faf68b20fe4a559a8d2bc08fed1b)
+    * [print list name when no anime found](https://github.com/prochy-exe/alfetcher/commit/efca221b8f78ac0848aaa7d8813b6b5c36e89c28)
+    * [drop user list caching](https://github.com/prochy-exe/alfetcher/commit/954fe02ef643e228561a2c3e845e18b431947652)
+    * [add function to update progress in users list](https://github.com/prochy-exe/alfetcher/commit/c040d8836efb44352dd2f1339305cb9c5296f97d)
+    * [add function to convert from al to mal id](https://github.com/prochy-exe/alfetcher/commit/278805356c25dcabb4029b01e337c40f83b135ac)
+    * [dates: Make sure they are not None](https://github.com/prochy-exe/alfetcher/commit/92db92773cea64ec7e8c8f12bcf4bc624c2400b2)
+    * [Formatting changes](https://github.com/prochy-exe/alfetcher/commit/b4a96be729ab23cff87fe00c2e0deab7d6b742f7)
 * [1.0.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.0.0)
     * [Initial Release](https://github.com/prochy-exe/alfetcher/commit/4b67b1d8719d183012446a065c5b6c941ec6518e)
 
