@@ -14,13 +14,12 @@ This library is aimed at people who might be interested in automatizing their an
 * Python(tested on the latest ver.)
 * An AniList account
 * An AniList developer app
-* Javascript enabled during the set-up process (for sending the access token back to Python)
 
 ### Installing
 
 * Clone this repo
 ```
-git clone https://github.com/ProchyGaming/alfetcher /path/to/desired/folder
+git clone https://github.com/prochy-exe/alfetcher /path/to/desired/folder
 ```
 * Install it using pip
 ```
@@ -41,7 +40,7 @@ pip install -e .
 
 * To import the library into your code use:
 ```
-import alhelper
+import alfetcher
 ```
 * When importing this library for the first time, you will be taken through the setup process
 
@@ -54,7 +53,7 @@ import alhelper
 * Choose whatever name you fancy, and for the redirect URL use http://localhost:8888/auth
 * After you save the client, copy the ID and paste it into the terminal
 * After entering the ID you will be taken to an auth page, where you need to allow the app to access your account.
-* Afterwards you will be taken to a redirect page that is momentarily hosted using gevent. (If you have any worries, please see the token_getter.html source code.)
+* Afterwards you will be taken to a redirect page that will automatically send the token to the library.
 * After that the library is successfully set-up and ready for use.
 
 ## Help
