@@ -131,8 +131,9 @@ def make_graphql_request(query, variables=None, anilist_token=None, user_request
         print(f"Retrying... (Attempt {retries})")
 
 def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  username=None):
-    if not username:
-        username = get_userdata(anilist_token)[0]
+    if anilist_token:
+        if not username:
+            username = get_userdata(anilist_token)[0]
         user_request = True
     else:
         user_request = False
@@ -227,8 +228,9 @@ def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  usernam
     return None
 
 def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None):
-    if not username:
-        username = get_userdata(anilist_token)[0]
+    if anilist_token:
+        if not username:
+            username = get_userdata(anilist_token)[0]
         user_request = True
     else:
         user_request = False
@@ -347,8 +349,9 @@ def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None)
         return ani_list
 
 def get_anime_entry_for_user(anilist_id, anilist_token=None, username=None):
-    if not username:
-        username = get_userdata(anilist_token)[0]
+    if anilist_token:
+        if not username:
+            username = get_userdata(anilist_token)[0]
         user_request = True
     else:
         user_request = False
