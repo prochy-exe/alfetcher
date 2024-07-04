@@ -555,7 +555,8 @@ def get_id(name, anilist_token=None):
             if status == "NOT_YET_RELEASED":
                 anime_info = None
             json_out = {name: anime_info}
-            utils_save_json(anilist_search_cache_path, json_out, False)
+            if anime_info:
+                utils_save_json(anilist_search_cache_path, json_out, False)
             return anime_info
         return None
     # Check if anime_id exists in cache
