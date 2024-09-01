@@ -1,5 +1,7 @@
 import json, os
 
+silent_mode = True if os.getenv('WEEB_SILENCE', '') else False
+
 def utils_save_json(file_path, data, overwrite = True):
     def update_json():
         json_copy = utils_read_json(file_path)
@@ -38,3 +40,6 @@ def utils_read_json(file_path):
             return data
     else:
         return None
+
+def print_deb(*args, **kwargs):
+    if not silent_mode: print(*args, **kwargs)
