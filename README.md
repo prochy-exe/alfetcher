@@ -61,6 +61,8 @@ import alfetcher
 If you encounter any issues, feel free to open a new issue. If you have any new ideas or fixes, please open a pull request, they are more than welcome!
 
 ## Version History
+* [1.4.0](https://github.com/prochy-exe/malfetcher/releases/tag/v1.4.0)
+    * [add env to minimize output](https://github.com/prochy-exe/alfetcher/commit/4d0c90af39c6f6bd39c9199005ea1447ad303fc5)
 * [1.3.0](https://github.com/prochy-exe/malfetcher/releases/tag/v1.3.0)
     * [don't cache empty searches](https://github.com/prochy-exe/alfetcher/commit/76c822ad2b1df430f27edf6245dde2c124b3b18e)
 * [1.2.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.2.0)
