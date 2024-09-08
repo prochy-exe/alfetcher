@@ -61,6 +61,10 @@ import alfetcher
 If you encounter any issues, feel free to open a new issue. If you have any new ideas or fixes, please open a pull request, they are more than welcome!
 
 ## Version History
+* [1.5.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.5.0)
+    * [guard against excessive updates](https://github.com/prochy-exe/alfetcher/commit/260bd7e9529582531820af3b9f0066e9b0b6c883)
+    * [make sure the id is a str](https://github.com/prochy-exe/alfetcher/commit/1756332241e7937ac5b1482c3bb9a5f9a5c1c5b7)
+    * [simply function and variable names](https://github.com/prochy-exe/alfetcher/commit/8d6560c28c8c2c02c7ad966acd662b8a126bf134)
 * [1.4.0](https://github.com/prochy-exe/malfetcher/releases/tag/v1.4.0)
     * [add env to minimize output](https://github.com/prochy-exe/alfetcher/commit/4d0c90af39c6f6bd39c9199005ea1447ad303fc5)
 * [1.3.0](https://github.com/prochy-exe/malfetcher/releases/tag/v1.3.0)
