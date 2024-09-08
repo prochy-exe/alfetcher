@@ -632,7 +632,7 @@ def update_entry(anime_id, progress, al_token=None):
     try:
         user_eps = get_anime_entry_for_user(anime_id, al_token=al_token)[anime_id]['watched_ep']
     except:
-        user_eps = 0
+        user_eps = -1 #allow for 0 as a value
 
     if progress <= user_eps:
         print_deb('Not updating, progress is lower or equal than user progress')
