@@ -4,8 +4,8 @@ from .utils import utils_save_json, utils_read_json, print_deb
 from .al_config_utils import config_setup
 
 script_path = os.path.dirname(os.path.abspath(__file__))
-anilist_id_cache_path = os.path.join(script_path, 'cache', 'anilist_id_cache.json')
-anilist_search_cache_path = os.path.join(script_path, 'cache', 'anilist_search_cache.json')
+al_id_cache_path = os.path.join(script_path, 'cache', 'anilist_id_cache.json')
+al_search_cache_path = os.path.join(script_path, 'cache', 'anilist_search_cache.json')
 config_path = os.path.join(script_path, 'config', 'config.json')
 
 
@@ -17,11 +17,11 @@ def clear_cache():
         del config['checked_date']
     except:
         pass
-    os.remove(anilist_id_cache_path)
-    os.remove(anilist_search_cache_path)
+    os.remove(al_id_cache_path)
+    os.remove(al_search_cache_path)
 
 def check_status_in_cache():
-    og_cache = utils_read_json(anilist_id_cache_path)
+    og_cache = utils_read_json(al_id_cache_path)
     if not og_cache: return
     cache = copy.deepcopy(og_cache)
     config_dict = utils_read_json(config_path) if utils_read_json(config_path) else {}
@@ -63,11 +63,11 @@ def check_status_in_cache():
                         cache.update(get_anime_info(anime, True))
         config_dict['checked_date'] = current_date.strftime('%Y-%m-%d')
         utils_save_json(config_path, config_dict)
-        utils_save_json(anilist_id_cache_path, cache, True)
+        utils_save_json(al_id_cache_path, cache, True)
 
 def load_cache():
     check_status_in_cache()
-    return utils_read_json(anilist_id_cache_path)
+    return utils_read_json(al_id_cache_path)
 
 def load_config():
     config = utils_read_json(config_path)
@@ -78,22 +78,22 @@ def load_config():
 
 # Functions
 
-def make_graphql_request(query, variables=None, anilist_token=None, user_request = False):
+def make_graphql_request(query, variables=None, al_token=None, user_request = False):
     # Constants for GraphQL endpoint and headers
     ANILIST_API_URL = "https://graphql.anilist.co"
     HEADERS = {}
     HEADERS['Content-Type'] = "application/json"
     
     if user_request:
-        if anilist_token:
+        if al_token:
             pass
         elif 'anilist_key' in os.environ:
-            anilist_token = os.getenv('anilist_key')
+            al_token = os.getenv('anilist_key')
             if not os.path.exists(os.path.dirname(config_path)):
                 os.makedirs(os.path.dirname(config_path))
         else:
-            anilist_token = load_config()
-        HEADERS['Authorization'] = f"Bearer {anilist_token}"
+            al_token = load_config()
+        HEADERS['Authorization'] = f"Bearer {al_token}"
 
     def make_request():
         response = requests.post(ANILIST_API_URL, json={'query': query, 'variables': variables}, headers=HEADERS)
@@ -130,10 +130,10 @@ def make_graphql_request(query, variables=None, anilist_token=None, user_request
                 
         print(f"Retrying... (Attempt {retries})")
 
-def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  username=None):
-    if anilist_token:
+def get_latest_anime_entry_for_user(status = "ALL", al_token=None,  username=None):
+    if al_token:
         if not username:
-            username = get_userdata(anilist_token)[0]
+            username = get_userdata(al_token)[0]
         user_request = True
     else:
         user_request = False
@@ -209,7 +209,7 @@ def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  usernam
     '''
     variables = {'username': username}
 
-    data = make_graphql_request(query, variables, anilist_token, user_request=user_request)
+    data = make_graphql_request(query, variables, al_token, user_request=user_request)
 
     if data:
         entries = data.get('MediaListCollection', {}).get('lists', [])[0].get('entries', [])
@@ -227,10 +227,10 @@ def get_latest_anime_entry_for_user(status = "ALL", anilist_token=None,  usernam
     print(f"No entries found for {username}'s {status.lower()} anime list.")
     return None
 
-def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None):
-    if anilist_token:
+def get_all_anime_for_user(status_list="ALL", al_token=None, username=None):
+    if al_token:
         if not username:
-            username = get_userdata(anilist_token)[0]
+            username = get_userdata(al_token)[0]
         user_request = True
     else:
         user_request = False
@@ -307,7 +307,7 @@ def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None)
         '''
         variables = {'username': username}
 
-        data = make_graphql_request(query, variables, anilist_token, user_request=user_request)
+        data = make_graphql_request(query, variables, al_token, user_request=user_request)
 
         user_ids = {}
             
@@ -348,15 +348,15 @@ def get_all_anime_for_user(status_list="ALL", anilist_token=None, username=None)
             ani_list.update(main_function(status))
         return ani_list
 
-def get_anime_entry_for_user(anilist_id, anilist_token=None, username=None):
-    if anilist_token:
+def get_anime_entry_for_user(al_id, al_token=None, username=None):
+    if al_token:
         if not username:
-            username = get_userdata(anilist_token)[0]
+            username = get_userdata(al_token)[0]
         user_request = True
     else:
         user_request = False
         
-    anilist_id = str(anilist_id)
+    al_id = str(al_id)
     query = '''
     query ($mediaId: Int, $username: String) {
         MediaList(mediaId: $mediaId, userName: $username, type: ANIME) {
@@ -366,12 +366,12 @@ def get_anime_entry_for_user(anilist_id, anilist_token=None, username=None):
         }   
     }
     '''
-    variables = {'mediaId': anilist_id, 'username': username}
-    data = make_graphql_request(query, variables, anilist_token, user_request=user_request)
+    variables = {'mediaId': al_id, 'username': username}
+    data = make_graphql_request(query, variables, al_token, user_request=user_request)
     if data:
         anime = data.get('MediaList', {})
         anime_id = str(anime['mediaId'])
-        anime_info = get_anime_info(anime_id, False, anilist_token)
+        anime_info = get_anime_info(anime_id, False, al_token)
         user_entry = {}    # Initialize as a dictionary if not already initialized
         user_entry.update(anime_info)
         user_entry[anime_id]['watched_ep'] = anime['progress']
@@ -379,7 +379,7 @@ def get_anime_entry_for_user(anilist_id, anilist_token=None, username=None):
         return user_entry
     return None
 
-def get_anime_info(anime_id, force_update = False, anilist_token=None):
+def get_anime_info(anime_id, force_update = False, al_token=None):
     if force_update:
         anime_cache = {}
     else:
@@ -387,11 +387,11 @@ def get_anime_info(anime_id, force_update = False, anilist_token=None):
     anime_id = str(anime_id)
     if not anime_id:
         return None
-    def fetch_from_anilist():
+    def fetch_from_al():
         # Fetch anime info from Anilist API or any other source
-        anime_info = anilist_fetch_anime_info(anime_id, anilist_token)
+        anime_info = al_fetch_anime_info(anime_id, al_token)
         # Cache the fetched anime info
-        utils_save_json(anilist_id_cache_path, anime_info, False)
+        utils_save_json(al_id_cache_path, anime_info, False)
         return anime_info
     # Check if anime_id exists in cache
     try:
@@ -399,11 +399,11 @@ def get_anime_info(anime_id, force_update = False, anilist_token=None):
                 print_deb("Returning cached result for anime_id:", anime_id)
                 return {anime_id: anime_cache[anime_id]}
         else:
-            return fetch_from_anilist()
+            return fetch_from_al()
     except TypeError:
-        return fetch_from_anilist()
+        return fetch_from_al()
 
-def anilist_fetch_anime_info(anilist_id, anilist_token=None):
+def al_fetch_anime_info(al_id, al_token=None):
     query = '''
     query ($mediaId: Int) {
         Media(id: $mediaId) {
@@ -452,9 +452,9 @@ def anilist_fetch_anime_info(anilist_id, anilist_token=None):
     }
     '''
     
-    variables = {'mediaId': anilist_id}
+    variables = {'mediaId': al_id}
 
-    data = make_graphql_request(query, variables, anilist_token)
+    data = make_graphql_request(query, variables, al_token)
     anime_data = {}
     if data:
         anime = data.get('Media', {})
@@ -539,24 +539,24 @@ def generate_anime_entry(anime_info):
                                 if not anime_info['nextAiringEpisode'] else anime_info['nextAiringEpisode']['episode']) #who needs readability
     anime_data['format'] = anime_info['format']
     anime_data['related'] = getRelated()
-    utils_save_json(anilist_id_cache_path, {anime_id: anime_data}, False)
+    utils_save_json(al_id_cache_path, {anime_id: anime_data}, False)
     return anime_data
 
-def get_id(name, anilist_token=None):
-    search_cache = utils_read_json(anilist_search_cache_path)
+def get_id(name, al_token=None):
+    search_cache = utils_read_json(al_search_cache_path)
     
-    def fetch_from_anilist():
+    def fetch_from_al():
         # Fetch anime info from Anilist API or any other source
-        anime_name = anilist_fetch_id(name)
+        anime_name = al_fetch_id(name)
         anime_info = str(anime_name) if anime_name else None
         if anime_info:
-            ani_dict = get_anime_info(anime_info, False, anilist_token)
+            ani_dict = get_anime_info(anime_info, False, al_token)
             status = ani_dict[anime_info]['status']
             if status == "NOT_YET_RELEASED":
                 anime_info = None
             json_out = {name: anime_info}
             if anime_info:
-                utils_save_json(anilist_search_cache_path, json_out, False)
+                utils_save_json(al_search_cache_path, json_out, False)
             return anime_info
         return None
     # Check if anime_id exists in cache
@@ -565,11 +565,11 @@ def get_id(name, anilist_token=None):
             print_deb("Returning cached result for search query:", name)
             return str(search_cache[name])
         else:
-            return fetch_from_anilist()
+            return fetch_from_al()
     except TypeError:
-        return fetch_from_anilist()
+        return fetch_from_al()
             
-def anilist_fetch_id(name, anilist_token=None):
+def al_fetch_id(name, al_token=None):
     query = '''
     query ($search: String) {
         Media(search: $search, type: ANIME) {
@@ -578,7 +578,7 @@ def anilist_fetch_id(name, anilist_token=None):
     }
     '''
     variables = {'search': name}
-    data = make_graphql_request(query, variables, anilist_token)
+    data = make_graphql_request(query, variables, al_token)
 
     if data:
         anime_list = data['Media']['id']
@@ -588,7 +588,7 @@ def anilist_fetch_id(name, anilist_token=None):
 
     return None
 
-def get_userdata(anilist_token=None):
+def get_userdata(al_token=None):
     # GraphQL query to get the username of the authenticated user
     query = """
     query {
@@ -602,7 +602,7 @@ def get_userdata(anilist_token=None):
     """
     
     variables = {}
-    data = make_graphql_request(query, variables, anilist_token, user_request = True)
+    data = make_graphql_request(query, variables, al_token, user_request = True)
 
     if data:
         # Extract the username from the response data
@@ -625,9 +625,9 @@ def al_to_mal_id(al_id):
         return int(data['Media']['idMal'])
     return None
 
-def update_entry(anime_id, progress, anilist_token=None):
+def update_entry(anime_id, progress, al_token=None):
     progress = int(progress)
-    total_eps = get_anime_info(anime_id, anilist_token=anilist_token)[anime_id]['total_eps']
+    total_eps = get_anime_info(anime_id, al_token=al_token)[anime_id]['total_eps']
     query = """
         mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus) {
             SaveMediaListEntry(mediaId: $mediaId, progress: $progress, status: $status) {
@@ -652,5 +652,5 @@ def update_entry(anime_id, progress, anilist_token=None):
         del variables['progress']
     else:
         variables['status'] = 'CURRENT'
-    make_graphql_request(query, variables, anilist_token, user_request = True)
+    make_graphql_request(query, variables, al_token, user_request = True)
     print_deb('Updating progress successful')
