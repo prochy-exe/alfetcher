@@ -61,6 +61,8 @@ import alfetcher
 If you encounter any issues, feel free to open a new issue. If you have any new ideas or fixes, please open a pull request, they are more than welcome!
 
 ## Version History
+* [1.6.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.6.0)
+    * [allow progress to be 0 again](https://github.com/prochy-exe/alfetcher/commit/e358434e157965f6ab4ea6f82fa54e5841e22715)
 * [1.5.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.5.0)
     * [guard against excessive updates](https://github.com/prochy-exe/alfetcher/commit/260bd7e9529582531820af3b9f0066e9b0b6c883)
     * [make sure the id is a str](https://github.com/prochy-exe/alfetcher/commit/1756332241e7937ac5b1482c3bb9a5f9a5c1c5b7)
