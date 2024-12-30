@@ -742,7 +742,7 @@ def update_entry(anime_id, progress, al_token=None):
     except:
         user_eps = -1 #allow for 0 as a value
 
-    if progress <= user_eps:
+    if progress <= user_eps and user_eps != total_eps:
         print_deb('Not updating, progress is lower or equal than user progress')
         return
 
@@ -756,7 +756,7 @@ def update_entry(anime_id, progress, al_token=None):
     variables = {}
     variables['mediaId'] = anime_id
     variables['progress'] = progress
-    if progress == total_eps:
+    if progress == total_eps and current_status != 'REPEATING':
         variables['status'] = 'COMPLETED'
     elif progress == 0:
         variables['status'] = 'PLANNING'
@@ -768,6 +768,12 @@ def update_entry(anime_id, progress, al_token=None):
             }
         """
     else:
-        variables['status'] = 'CURRENT'
+        if current_status == 'COMPLETED':
+            variables['status'] = 'REPEATING'
+        elif current_status == 'REPEATING':
+            if progress == total_eps:
+                variables['status'] = 'COMPLETED'
+        else:
+            variables['status'] = 'CURRENT'
     make_graphql_request(query, variables, al_token, user_request = True)
     print_deb('Updating progress successful')
