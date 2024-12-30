@@ -61,6 +61,15 @@ import alfetcher
 If you encounter any issues, feel free to open a new issue. If you have any new ideas or fixes, please open a pull request, they are more than welcome!
 
 ## Version History
+* [1.7.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.7.0)
+    * [update_entry: read token from config](https://github.com/prochy-exe/alfetcher/commit/e55d725c9bf56208be7745b4f428406419b9eede)
+    * [rewatch](https://github.com/prochy-exe/alfetcher/commit/9515dbd0283c3162375fad27b3f5c5978baabc8d)   
+    * [repeating support for update_entry](https://github.com/prochy-exe/alfetcher/commit/e550ad1ab816f0f880e57864eaa45f28e4f9d631)
+    * [add a feature that allows specifying episodes from another season](https://github.com/prochy-exe/alfetcher/commit/d4de856f2663f332787068ab014f24d485378e28)
+    * [fix a bug that marks anime as planning while having an episode watched](https://github.com/prochy-exe/alfetcher/commit/e490fed4d862c7c0a76a1c66ca4fa6717c0b9340)
+    * [introduce a function that returns list of all seasons](https://github.com/prochy-exe/alfetcher/commit/64db1fdecc097a364e00e39686eecd0d32914892)
+    * [add time before opening the browser](https://github.com/prochy-exe/alfetcher/commit/eb498fb629c7717269a8865b02d4ab0179812ead)
+    * [add url tooltip](https://github.com/prochy-exe/alfetcher/commit/e3e2c0836cddea259cd87c8bff2c196d3dfe5b73)
 * [1.6.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.6.0)
     * [allow progress to be 0 again](https://github.com/prochy-exe/alfetcher/commit/e358434e157965f6ab4ea6f82fa54e5841e22715)
 * [1.5.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.5.0)
