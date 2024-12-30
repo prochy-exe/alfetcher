@@ -1,4 +1,4 @@
-import requests, time, os, copy, math
+import requests, time, os, copy, math, re
 from datetime import datetime, timedelta
 from .utils import utils_save_json, utils_read_json, print_deb
 from .al_config_utils import config_setup
@@ -624,6 +624,92 @@ def al_to_mal_id(al_id):
     if data:
         return int(data['Media']['idMal'])
     return None
+
+def get_season_ranges(anime_id):
+    anime_id = str(anime_id)
+    def go_to_first_season(anime_id):
+        anime_info = get_anime_info(anime_id)[anime_id]
+        related_anime = None
+        if not anime_info['related']:
+            return anime_id
+        for relation in anime_info['related']:
+            if anime_info['related'][relation]['type'] == 'PREQUEL':
+                related_anime = get_anime_info(relation)[relation]
+                has_prequel = True
+                break
+        if not related_anime:
+            return anime_id
+        while related_anime:
+            related_anime = anime_info['related']
+            if related_anime and has_prequel:
+                has_prequel = False
+                for relation in related_anime:
+                    if related_anime[relation]['type'] == 'PREQUEL':
+                        anime_id = relation
+                        has_prequel = True
+                        anime_info = get_anime_info(relation)[relation]
+                        break
+            else:
+                return anime_id
+
+    def skip_movies(anime_id):
+        while True:
+            anime_info = get_anime_info(anime_id)[anime_id]
+            if anime_info['format'] != 'MOVIE':
+                break
+            related_anime = anime_info['related']
+            if not related_anime:
+                break
+            next_anime_id = None
+            for relation in related_anime:
+                if related_anime[relation]['type'] == 'SEQUEL':
+                    next_anime_id = relation
+                    break
+            if not next_anime_id:
+                break
+            anime_id = next_anime_id
+        return anime_id
+
+    season_ranges = {}
+    range_start = 1
+    anime_id = go_to_first_season(anime_id)
+    anime_id = skip_movies(anime_id)
+    anime_info = get_anime_info(anime_id)[anime_id]
+    backup_season_counter = 0
+    try:
+        range_end = int(anime_info['total_eps'])
+    except:
+        range_end = 9999
+    while anime_id:
+        anime_info = get_anime_info(anime_id)[anime_id]
+        season_regex = re.search(r"(\d+)\w\w season", anime_info['main_title'].lower()) 
+        if season_regex:
+            season = int(season_regex.group(1))
+        else:
+            season = backup_season_counter + 1
+        backup_season_counter = season
+        try:
+            season_ranges[season]['end'] = season_ranges[season]['end'] + anime_info['total_eps']
+            season_ranges[season]['total_eps'] = season_ranges[season]['total_eps'] + anime_info['total_eps']
+            range_end = season_ranges[season]['end']
+        except:
+            season_ranges[season] = {'id': anime_id, 'start': range_start, 'end': range_end, 'total_eps': anime_info['total_eps']}
+        related_anime = anime_info['related']
+        if related_anime:
+            anime_id = None
+            for relation in related_anime:
+                relation_info = get_anime_info(relation)[relation]
+                if related_anime[relation]['type'] == 'SEQUEL' and related_anime[relation]['status'] != 'NOT_YET_RELEASED':
+                    range_start = range_end + 1
+                    try:
+                        range_end = range_start + int(relation_info['total_eps'])
+                    except:
+                        range_end = 9999
+                    anime_id = relation
+                    anime_id = skip_movies(anime_id)
+        else:
+            break
+    return season_ranges
 
 def update_entry(anime_id, progress, al_token=None):
     anime_id = str(anime_id)
