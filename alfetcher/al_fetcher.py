@@ -746,34 +746,35 @@ def update_entry(anime_id, progress, al_token=None):
         print_deb('Not updating, progress is lower or equal than user progress')
         return
 
-    query = """
+    status_query = """
         mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus) {
             SaveMediaListEntry(mediaId: $mediaId, progress: $progress, status: $status) {
                 id
             }
         }
     """
+    query = """
+        mutation ($mediaId: Int, $progress: Int) {
+            SaveMediaListEntry(mediaId: $mediaId, progress: $progress) {
+                id
+            }
+        }
+    """
+    
     variables = {}
     variables['mediaId'] = anime_id
     variables['progress'] = progress
-    if progress == total_eps and current_status != 'REPEATING':
+    if user_eps == total_eps:
+        variables['status'] = 'REPEATING'
+        query = status_query
+    elif progress == total_eps and current_status == 'REPEATING':
         variables['status'] = 'COMPLETED'
+        query = status_query
     elif progress == 0:
-        variables['status'] = 'PLANNING'
-        query = """
-            mutation ($mediaId: Int, $status: MediaListStatus) {
-                SaveMediaListEntry(mediaId: $mediaId, status: $status) {
-                    id
-                }
-            }
-        """
-    else:
         if current_status == 'COMPLETED':
             variables['status'] = 'REPEATING'
-        elif current_status == 'REPEATING':
-            if progress == total_eps:
-                variables['status'] = 'COMPLETED'
-        else:
-            variables['status'] = 'CURRENT'
+        elif user_eps == -1:
+            variables['status'] = 'PLANNING'
+        query = status_query
     make_graphql_request(query, variables, al_token, user_request = True)
     print_deb('Updating progress successful')
