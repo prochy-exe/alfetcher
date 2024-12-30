@@ -714,6 +714,8 @@ def get_season_ranges(anime_id):
 def update_entry(anime_id, progress, al_token=None):
     anime_id = str(anime_id)
     progress = int(progress)
+    if not al_token:
+        al_token = load_config()
     try:
         anime_info = get_anime_entry_for_user(anime_id, al_token=al_token)[anime_id]
         current_status = anime_info['watching_status']
