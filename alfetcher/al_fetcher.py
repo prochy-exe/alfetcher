@@ -745,7 +745,6 @@ def update_entry(anime_id, progress, al_token=None):
                 }
             }
         """
-        del variables['progress']
     else:
         variables['status'] = 'CURRENT'
     make_graphql_request(query, variables, al_token, user_request = True)
