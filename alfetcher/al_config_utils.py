@@ -3,6 +3,7 @@ from flask import Flask, request, redirect
 from gevent.pywsgi import WSGIServer
 from urllib.parse import parse_qs
 from .utils import utils_save_json
+from time import sleep
 
 def get_ip_address():
     try:
@@ -125,8 +126,9 @@ def config_setup(print_only = False):
         client_id = get_input(gen_please("Anilist API Client ID","https://anilist.co/settings/developer"))
         client_secret = get_input(gen_please("Anilist API Client Secret",f"https://anilist.co/settings/client/{client_id}"))
     else:
-        webbrowser.open("https://anilist.co/settings/developer", 0)
         client_id = get_input(gen_please("Anilist API Client ID","Paste the Client ID"))    
+        sleep(1)
+        webbrowser.open("https://anilist.co/settings/developer", 0)
         client_secret = get_input(gen_please("Anilist API Client Secret","Paste the Client Secret"))
     config_dict['anilist_user_token'] = generate_api_key(client_id, client_secret)
     if not print_only:    
