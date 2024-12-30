@@ -15,8 +15,6 @@ def get_ip_address():
         print("Error:", e)
         return None
 
-host_ip = get_ip_address()
-
 # Paths
 script_path = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(script_path, 'config', 'config.json')
@@ -28,6 +26,11 @@ headless_config = False
 if is_linux:
     if is_ssh or is_displayless:
         headless_config = True
+
+if headless_config:
+    host_ip = get_ip_address()
+else:
+    host_ip = 'localhost'
  
 def setup_webserver():
     app = Flask(__name__)
@@ -114,6 +117,7 @@ def config_setup(print_only = False):
     config_dict = {}
     print("ONLY THE USER TOKEN WILL BE SAVED!!!!")
     print("Please create a new API client")
+    print(f"Put this as the redirect URI: http://{host_ip}:8888/access_token")
     if headless_config:
         if is_displayless:
             print("The setup process cannot be continued on this machine")
