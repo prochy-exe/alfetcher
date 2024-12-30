@@ -714,9 +714,31 @@ def get_season_ranges(anime_id):
 def update_entry(anime_id, progress, al_token=None):
     anime_id = str(anime_id)
     progress = int(progress)
-    total_eps = get_anime_info(anime_id, al_token=al_token)[anime_id]['total_eps']
     try:
-        user_eps = get_anime_entry_for_user(anime_id, al_token=al_token)[anime_id]['watched_ep']
+        anime_info = get_anime_entry_for_user(anime_id, al_token=al_token)[anime_id]
+        current_status = anime_info['watching_status']
+    except:
+        anime_info = get_anime_info(anime_id, True)[anime_id]
+        current_status = 'PLANNING'
+    total_eps = anime_info['total_eps']
+    if progress > total_eps:
+        season_ranges = get_season_ranges(anime_id)
+        skipped_eps = 0
+        for season in season_ranges:
+            if progress <= season_ranges[season]['end']:
+                anime_id = str(season_ranges[season]['id'])
+                progress = progress - skipped_eps
+                try:
+                    anime_info = get_anime_entry_for_user(anime_id)[anime_id]
+                    current_status = anime_info['watching_status']
+                except:
+                    anime_info = get_anime_info(anime_id)[anime_id]
+                    current_status = 'PLANNING'
+                total_eps = anime_info['total_eps']
+                break
+            skipped_eps += season_ranges[season]['total_eps']
+    try:
+        user_eps = anime_info['watched_ep']
     except:
         user_eps = -1 #allow for 0 as a value
 
