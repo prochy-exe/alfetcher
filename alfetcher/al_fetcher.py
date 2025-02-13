@@ -3,11 +3,16 @@ from datetime import datetime, timedelta
 from .utils import utils_save_json, utils_read_json, print_deb
 from .al_config_utils import config_setup
 
+# Paths
+
 script_path = os.path.dirname(os.path.abspath(__file__))
 al_id_cache_path = os.path.join(script_path, 'cache', 'anilist_id_cache.json')
 al_search_cache_path = os.path.join(script_path, 'cache', 'anilist_search_cache.json')
 config_path = os.path.join(script_path, 'config', 'config.json')
 
+# Global vars
+status_options = ["CURRENT", "PLANNING", "COMPLETED", "DROPPED", "PAUSED", "REPEATING"]
+media_formats = ['TV', 'MOVIE', 'SPECIAL', 'OVA', 'ONA', 'MUSIC']
 
 # Utils
 
@@ -130,128 +135,32 @@ def make_graphql_request(query, variables=None, al_token=None, user_request = Fa
                 
         print(f"Retrying... (Attempt {retries})")
 
-def get_latest_anime_entry_for_user(status = "ALL", al_token=None,  username=None):
+def get_all_anime_for_user(status_list="ALL", media_format = None, amount = 0, al_token=None, username=None):
     if al_token:
         if not username:
             username = get_userdata(al_token)[0]
         user_request = True
     else:
         user_request = False
-        
-    status = status.upper()
-    status_options = ["CURRENT", "PLANNING", "COMPLETED", "DROPPED", "PAUSED", "REPEATING"]
-    if status != "ALL":
-        if not status in status_options:
-            print("Invalid status option. Allowed options are:", ", ".join(str(option) for option in status_options) )
+    media_format = media_format.upper() if media_format else None
+    if media_format:
+        if media_format not in media_formats:
+            print("Invalid media format. Please choose from:", media_formats)
             return
-        query = '''
-        query ($username: String) {
-            MediaListCollection(userName: $username, type: ANIME, status: %s, sort: [UPDATED_TIME_DESC]) {
-        ''' %status
-    else:
-        query = '''
-        query ($username: String) {
-            MediaListCollection(userName: $username, type: ANIME, sort: [UPDATED_TIME_DESC]) {
-        '''        
-    query += '''
-            lists {
-                entries {
-                    id
-                    progress
-                    status
-                    media {
-                        id
-                        idMal
-                        episodes
-                        tags {
-                            name
-                        }
-                        genres
-                        isAdult
-                        title {
-                            romaji
-                            english
-                            native
-                        }
-                        synonyms
-                        status
-                        startDate {
-                            year
-                            month
-                            day
-                        }
-                        endDate {
-                            year
-                            month
-                            day
-                        }
-                        nextAiringEpisode {
-                            episode
-                        }
-                        format
-                        relations {
-                            edges {
-                                relationType(version: 2)
-                                node {
-                                    id
-                                    title {
-                                        romaji
-                                    }
-                                    status
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    '''
-    variables = {'username': username}
-
-    data = make_graphql_request(query, variables, al_token, user_request=user_request)
-
-    if data:
-        entries = data.get('MediaListCollection', {}).get('lists', [])[0].get('entries', [])
-        if entries:
-            for anime in entries:
-                anime_id = str(anime['media']['id'])
-                anime_info = generate_anime_entry(anime['media'])
-                user_entry = {}    # Initialize as a dictionary if not already initialized
-                user_entry[anime_id] = {}    # Initialize as a dictionary if not already initialized
-                user_entry[anime_id].update(anime_info)
-                user_entry[anime_id]['watched_ep'] = anime['progress']
-                user_entry[anime_id]['watching_status'] = anime['status']
-                return user_entry
-
-    print(f"No entries found for {username}'s {status.lower()} anime list.")
-    return None
-
-def get_all_anime_for_user(status_list="ALL", al_token=None, username=None):
-    if al_token:
-        if not username:
-            username = get_userdata(al_token)[0]
-        user_request = True
-    else:
-        user_request = False
-        
+    media_format = ['TV', 'TV_SHORT'] if media_format == 'TV' else [media_format]
+    amount = int(amount)
+    
     def main_function(status):
         status = status.upper()
-        status_options = ["CURRENT", "PLANNING", "COMPLETED", "DROPPED", "PAUSED", "REPEATING"]
+        status_query = ""
         if status != "ALL":
             if not status in status_options:
                 print("Invalid status option. Allowed options are:", ", ".join(str(option) for option in status_options))
                 return
-            query = '''
-            query ($username: String) {
-                MediaListCollection(userName: $username, type: ANIME, status: %s, sort: [UPDATED_TIME_DESC]) {
-            ''' %status
-        else:
-            query = '''
-            query ($username: String) {
-                MediaListCollection(userName: $username, type: ANIME, sort: [UPDATED_TIME_DESC]) {
-            '''        
-        query += '''
+            status_query = f", status: {status}"
+        query = '''
+        query ($username: String) {
+            MediaListCollection(userName: $username, type: ANIME, sort: [UPDATED_TIME_DESC]%s) {
                 lists {
                     entries {
                         id
@@ -304,33 +213,42 @@ def get_all_anime_for_user(status_list="ALL", al_token=None, username=None):
                 }
             }
         }
-        '''
+        '''% (status_query)
         variables = {'username': username}
 
         data = make_graphql_request(query, variables, al_token, user_request=user_request)
 
         user_ids = {}
-            
+        if amount:
+            x = 0
         if data:
-                entries = data.get('MediaListCollection', {}).get('lists', [])
-                full_entries = {}
-                for entry in entries: 
-                    for list_entry in entry['entries']:
-                        full_entries[str(list_entry['id'])] = {}
-                        full_entries[str(list_entry['id'])].update(list_entry) 
-                if full_entries:
-                        for anime_entry in full_entries:
-                            anime = full_entries[anime_entry]
-                            anime_entry_data = anime['media']
-                            anime_id = anime_entry_data['id']
-                            anime_id = str(anime_id)
-                            anime_info = generate_anime_entry(anime_entry_data)
-                            if not anime_id in user_ids:
-                                user_ids[anime_id] = {}    # Initialize as a dictionary if not already initialized
-                            user_ids[anime_id].update(anime_info)
-                            user_ids[anime_id]['watched_ep'] = anime['progress']
-                            user_ids[anime_id]['watching_status'] = anime['status']
-                        return user_ids
+            entries = data.get('MediaListCollection', {}).get('lists', [])
+            full_entries = {}
+            for entry in entries: 
+                for list_entry in entry['entries']:
+                    full_entries[str(list_entry['id'])] = {}
+                    if media_format and list_entry['media']['format'] in media_format:
+                        full_entries[str(list_entry['id'])].update(list_entry)
+                        if amount:
+                            x += 1
+                            if x == amount:
+                                break
+                if amount:
+                    if x == amount:
+                        break
+            if full_entries:
+                for anime_entry in full_entries:
+                    anime = full_entries[anime_entry]
+                    anime_entry_data = anime['media']
+                    anime_id = anime_entry_data['id']
+                    anime_id = str(anime_id)
+                    anime_info = generate_anime_entry(anime_entry_data)
+                    if not anime_id in user_ids:
+                        user_ids[anime_id] = {}    # Initialize as a dictionary if not already initialized
+                    user_ids[anime_id].update(anime_info)
+                    user_ids[anime_id]['watched_ep'] = anime['progress']
+                    user_ids[anime_id]['watching_status'] = anime['status']
+                return user_ids
         print(f"No entries found for {username}'s {status.lower()} anime list.")
         return None    
 
@@ -347,6 +265,17 @@ def get_all_anime_for_user(status_list="ALL", al_token=None, username=None):
             status.upper()
             ani_list.update(main_function(status))
         return ani_list
+
+def get_latest_anime_entry_for_user(status = "ALL", media_format = None, al_token=None,  username=None):
+    if al_token:
+        if not username:
+            username = get_userdata(al_token)[0]
+    status = status.upper()
+    data = get_all_anime_for_user(status, media_format, 1, al_token, username)
+    if data:
+        return data
+    print(f"No entries found for {username}'s {status.lower()} anime list.")
+    return None
 
 def get_anime_entry_for_user(al_id, al_token=None, username=None):
     if al_token:
@@ -542,51 +471,90 @@ def generate_anime_entry(anime_info):
     utils_save_json(al_id_cache_path, {anime_id: anime_data}, False)
     return anime_data
 
-def get_id(name, al_token=None):
+def get_id(name, media_format = None, amount = 1, al_token=None):
     search_cache = utils_read_json(al_search_cache_path)
-    
+    id_dict = {}
+    amount = int(amount)
+    format_name = name
+    media_format = media_format.upper() if media_format else None
+    if media_format:
+        if media_format not in media_formats:
+            print("Invalid media format. Please choose from:", media_formats)
+            return
+        format_name = f"{name}_{media_format}"
     def fetch_from_al():
         # Fetch anime info from Anilist API or any other source
-        anime_name = al_fetch_id(name)
-        anime_info = str(anime_name) if anime_name else None
-        if anime_info:
-            ani_dict = get_anime_info(anime_info, False, al_token)
-            status = ani_dict[anime_info]['status']
-            if status == "NOT_YET_RELEASED":
-                anime_info = None
-            json_out = {name: anime_info}
-            if anime_info:
-                utils_save_json(al_search_cache_path, json_out, False)
-            return anime_info
+        missing_amount = amount - len(search_cache.get(format_name, []))
+        anime_ids = al_fetch_id(name, media_format, missing_amount, al_token)
+        if anime_ids:
+            if format_name in search_cache:
+                existing_ids = set(search_cache[format_name])
+                new_anime_ids = [anime_id for anime_id in anime_ids if anime_id not in existing_ids]
+                search_cache[format_name].extend(new_anime_ids) 
+            else:
+                search_cache[format_name] = anime_ids
+            utils_save_json(al_search_cache_path, search_cache)
+            for anime_id in search_cache[format_name][:amount]:
+                id_dict.update(get_anime_info(anime_id, True, al_token))
+            return id_dict
         return None
     # Check if anime_id exists in cache
     try:
-        if search_cache and name in search_cache:
+        if search_cache and format_name in search_cache and len(search_cache[format_name]) >= amount:
             print_deb("Returning cached result for search query:", name)
-            return str(search_cache[name])
+            found_ids = search_cache[format_name]
+            for found_id in found_ids:
+                id_dict.update(get_anime_info(found_id, False, al_token))
+            return id_dict
         else:
             return fetch_from_al()
-    except TypeError:
+    except:
         return fetch_from_al()
             
-def al_fetch_id(name, al_token=None):
+def al_fetch_id(name, media_format, amount, al_token):
+    anime_ids = []
+    x = 0
+    format_query = ", $format: MediaFormat" if media_format else ""
+    result_query = ", format: $format" if media_format else ""
+    variables = {'search': name}
     query = '''
-    query ($search: String) {
-        Media(search: $search, type: ANIME) {
-            id
+    query ($search: String%s) {
+        anime: Page(perPage: 50) {
+            results: media(type: ANIME, search: $search%s) {
+                id
+                status
+            }
         }
     }
-    '''
-    variables = {'search': name}
+    '''% (format_query, result_query)
+    if media_format:
+        if media_format == 'TV':
+            for tv_format in ['TV', 'TV_SHORT']:
+                variables['format'] = tv_format
+                data = make_graphql_request(query, variables, al_token)
+                try:
+                    for result in data['anime']['results']:
+                        if x >= amount:
+                            break
+                        if result['status'] != 'NOT_YET_RELEASED':
+                            anime_ids.append(result['id'])
+                            x += 1
+                except:
+                    pass
+            return anime_ids
+        else:
+            variables['format'] = media_format
     data = make_graphql_request(query, variables, al_token)
 
-    if data:
-        anime_list = data['Media']['id']
-
-        if anime_list:
-            return anime_list
-
-    return None
+    try:
+        for result in data['anime']['results']:
+            if x >= amount:
+                break
+            anime_ids.append(result['id'])
+            x += 1
+        return anime_ids
+    except:
+        return None
 
 def get_userdata(al_token=None):
     # GraphQL query to get the username of the authenticated user
