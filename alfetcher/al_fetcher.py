@@ -542,51 +542,108 @@ def generate_anime_entry(anime_info):
     utils_save_json(al_id_cache_path, {anime_id: anime_data}, False)
     return anime_data
 
-def get_id(name, al_token=None):
+def get_id(name, al_token=None, media_format = None, amount = 1):
     search_cache = utils_read_json(al_search_cache_path)
-    
+    amount = int(amount)
+    format_name = name
+    media_format = media_format.upper() if media_format else None
+    if media_format:
+        media_formats = ['TV', 'MOVIE', 'SPECIAL', 'OVA', 'ONA', 'MUSIC']
+        if media_format not in media_formats:
+            print("Invalid media format. Please choose from:", media_formats)
+            return
+        format_name = f"{name}_{media_format}"
     def fetch_from_al():
         # Fetch anime info from Anilist API or any other source
-        anime_name = al_fetch_id(name)
-        anime_info = str(anime_name) if anime_name else None
+        anime_info = al_fetch_id(name, media_format, amount, al_token)
         if anime_info:
-            ani_dict = get_anime_info(anime_info, False, al_token)
-            status = ani_dict[anime_info]['status']
-            if status == "NOT_YET_RELEASED":
-                anime_info = None
-            json_out = {name: anime_info}
-            if anime_info:
-                utils_save_json(al_search_cache_path, json_out, False)
+            if format_name in search_cache:
+                try:
+                    search_cache[format_name].update(anime_info)
+                except:
+                    search_cache[format_name] = anime_info
+            else:
+                search_cache[format_name] = anime_info
+            utils_save_json(al_search_cache_path, search_cache)
             return anime_info
         return None
     # Check if anime_id exists in cache
     try:
-        if search_cache and name in search_cache:
+        if search_cache and format_name in search_cache:
             print_deb("Returning cached result for search query:", name)
-            return str(search_cache[name])
+            return [{search_cache[format_name].keys()[x]: search_cache[format_name][search_cache[format_name].keys()[x]]} for x in range(max(amount, len(search_cache[format_name])))]
         else:
             return fetch_from_al()
-    except TypeError:
+    except:
         return fetch_from_al()
             
-def al_fetch_id(name, al_token=None):
-    query = '''
-    query ($search: String) {
-        Media(search: $search, type: ANIME) {
-            id
+def al_fetch_id(name, media_format, amount, al_token):
+    anime_data = {}
+    x = 0
+    if not media_format:
+        query = '''
+        query ($search: String) {
+            anime: Page(perPage: 50) {
+                pageInfo {
+                    total
+                }
+                results: media(type: ANIME, search: $search) {
+                    id
+                    title {
+                        english
+                        romaji
+                    }
+                    status
+                }
+            }
         }
-    }
-    '''
-    variables = {'search': name}
+        '''
+        variables = {'search': name}
+    else:
+        query = '''
+        query ($search: String, $format: MediaFormat) {
+            anime: Page(perPage: 50) {
+                pageInfo {
+                    total
+                }
+                results: media(type: ANIME, search: $search, format: $format) {
+                    id
+                    title {
+                        english
+                        romaji
+                    }
+                    status
+                }
+            }
+        }
+        '''
+        if media_format == 'TV':
+            for tv_format in ['TV', 'TV_SHORT']:
+                variables = {'search': name, 'format': tv_format}
+                data = make_graphql_request(query, variables, al_token)
+                try:
+                    for result in data['anime']['results']:
+                        if x >= amount:
+                            break
+                        if result['status'] != 'NOT_YET_RELEASED':
+                            anime_data.update({result['id']: result['title']})
+                            x += 1
+                except:
+                    pass
+            return anime_data
+        else:
+            variables = {'search': name, 'format': media_format}
     data = make_graphql_request(query, variables, al_token)
 
-    if data:
-        anime_list = data['Media']['id']
-
-        if anime_list:
-            return anime_list
-
-    return None
+    try:
+        for result in data['anime']['results']:
+            if x >= amount:
+                break
+            anime_data.update({result['id']: result['title']})
+            x += 1
+        return anime_data
+    except:
+        return None
 
 def get_userdata(al_token=None):
     # GraphQL query to get the username of the authenticated user
