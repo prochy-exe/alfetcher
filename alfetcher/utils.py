@@ -35,11 +35,11 @@ def utils_read_json(file_path):
         with open(file_path, "r", encoding="utf-8") as json_file:
             data = json.load(json_file)
         if data == {}:
-            return None
+            return {}
         else:
             return data
     else:
-        return None
+        return {}
 
 def print_deb(*args, **kwargs):
     if not silent_mode: print(*args, **kwargs)
