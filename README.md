@@ -61,6 +61,9 @@ import alfetcher
 If you encounter any issues, feel free to open a new issue. If you have any new ideas or fixes, please open a pull request, they are more than welcome!
 
 ## Version History
+* [1.8.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.8.0)
+    * [return empty dict instead of none](https://github.com/prochy-exe/alfetcher/commit/e74dce2b0b4bc824dec25b95294cde6a083367f4)
+    * [amount and format support, general improvements](https://github.com/prochy-exe/alfetcher/commit/2ab757df36e5b0e4cd33d873cf5f314be44daebf)   
 * [1.7.0](https://github.com/prochy-exe/alfetcher/releases/tag/v1.7.0)
     * [update_entry: read token from config](https://github.com/prochy-exe/alfetcher/commit/e55d725c9bf56208be7745b4f428406419b9eede)
     * [rewatch](https://github.com/prochy-exe/alfetcher/commit/9515dbd0283c3162375fad27b3f5c5978baabc8d)   
